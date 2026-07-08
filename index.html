@@ -209,7 +209,7 @@ const fmt = (n) => {
   return 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
 };
 
-let sel = {curso:null, fonte:null, secao:null, parcelas:null, descontoIdx:null};
+let sel = {curso:null, fonte:null, secao:null, parcelas:null, parcelasSet:false, descontoIdx:null};
 
 const cursoEl = document.getElementById('curso');
 const fonteEl = document.getElementById('fonte');
@@ -227,7 +227,7 @@ cursos.forEach(c=>{
 });
 
 cursoEl.addEventListener('change', ()=>{
-  sel = {curso: cursoEl.value || null, fonte:null, secao:null, parcelas:null, descontoIdx:null};
+  sel = {curso: cursoEl.value || null, fonte:null, secao:null, parcelas:null, parcelasSet:false, descontoIdx:null};
   resetDownstream('fonte');
   if(!sel.curso){ setDisabled('step-fonte', true); return; }
   const fontes = uniq(plans.filter(p=>p.curso===sel.curso).map(p=>p.fonte));
@@ -237,7 +237,7 @@ cursoEl.addEventListener('change', ()=>{
 
 fonteEl.addEventListener('change', ()=>{
   sel.fonte = fonteEl.value || null;
-  sel.secao=null; sel.parcelas=null; sel.descontoIdx=null;
+  sel.secao=null; sel.parcelas=null; sel.parcelasSet=false; sel.descontoIdx=null;
   resetDownstream('secao');
   if(!sel.fonte){ setDisabled('step-secao', true); return; }
   const secoes = uniq(plans.filter(p=>p.curso===sel.curso && p.fonte===sel.fonte).map(p=>p.secao));
@@ -247,24 +247,36 @@ fonteEl.addEventListener('change', ()=>{
 
 secaoEl.addEventListener('change', ()=>{
   sel.secao = secaoEl.value || null;
-  sel.parcelas=null; sel.descontoIdx=null;
+  sel.parcelas=null; sel.parcelasSet=false; sel.descontoIdx=null;
   parcelasHolder.innerHTML=''; descontoHolder.innerHTML=''; resultHolder.innerHTML='';
   setDisabled('step-desconto', true);
   if(!sel.secao){ setDisabled('step-parcelas', true); return; }
   setDisabled('step-parcelas', false);
   const rows = plans.filter(p=>p.curso===sel.curso && p.fonte===sel.fonte && p.secao===sel.secao);
-  const parcelasOpts = uniq(rows.map(p=>p.parcelas));
-  parcelasHolder.innerHTML = parcelasOpts.map(pc=>{
-    const label = (typeof pc === 'number') ? (pc===1 ? 'à vista / único' : pc+'x') : pc;
-    return `<button type="button" class="pill" data-p="${pc}">${label}</button>`;
+  // dedupe parcelas values, keep track of the raw value (may be null, number or string)
+  const seen = [];
+  rows.forEach(p=>{
+    const key = JSON.stringify(p.parcelas);
+    if(!seen.some(s=>s.key===key)) seen.push({key, value:p.parcelas});
+  });
+  parcelasHolder.innerHTML = seen.map((s,i)=>{
+    let label;
+    if(s.value === null || s.value === undefined){
+      label = 'Pagamento único';
+    } else if(typeof s.value === 'number'){
+      label = s.value===1 ? 'à vista / único' : s.value+'x';
+    } else {
+      label = s.value;
+    }
+    return `<button type="button" class="pill" data-idx="${i}">${escapeHtml(String(label))}</button>`;
   }).join('');
   parcelasHolder.querySelectorAll('.pill').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       parcelasHolder.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      const raw = btn.dataset.p;
-      const num = Number(raw);
-      sel.parcelas = isNaN(num) ? raw : num;
+      const idx = Number(btn.dataset.idx);
+      sel.parcelas = seen[idx].value;
+      sel.parcelasSet = true;
       sel.descontoIdx = null;
       showDescontoStep();
       renderResult();
@@ -293,9 +305,12 @@ function resetDownstream(fromStep){
   order.forEach((s,i)=>{
     if(i>=startIdx){
       setDisabled('step-'+s, true);
+      if(s==='fonte') fonteEl.innerHTML='';
+      if(s==='secao') secaoEl.innerHTML='';
+      if(s==='parcelas') parcelasHolder.innerHTML='';
+      if(s==='desconto') descontoHolder.innerHTML='';
     }
   });
-  fonteEl.innerHTML=''; secaoEl.innerHTML=''; parcelasHolder.innerHTML=''; descontoHolder.innerHTML='';
   resultHolder.innerHTML='';
 }
 
@@ -309,8 +324,8 @@ function escapeHtml(s){
 }
 
 function renderResult(){
-  if(sel.parcelas===null || sel.parcelas===undefined){ resultHolder.innerHTML=''; return; }
-  const row = plans.find(p=>p.curso===sel.curso && p.fonte===sel.fonte && p.secao===sel.secao && p.parcelas===sel.parcelas);
+  if(!sel.parcelasSet){ resultHolder.innerHTML=''; return; }
+  const row = plans.find(p=>p.curso===sel.curso && p.fonte===sel.fonte && p.secao===sel.secao && JSON.stringify(p.parcelas)===JSON.stringify(sel.parcelas));
   if(!row){ resultHolder.innerHTML = '<div class="empty-msg">Nenhum link encontrado para essa combinação.</div>'; return; }
 
   let discountPct = 0, couponCode = null;
