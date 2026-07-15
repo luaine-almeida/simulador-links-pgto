@@ -173,6 +173,46 @@
     display:inline-block;background:var(--danger);color:#fff;text-decoration:none;
     padding:9px 16px;border-radius:7px;font-size:13.5px;font-weight:700;
   }
+
+  .guide{
+    border:1px solid var(--line);border-radius:var(--radius);background:#fff;
+    margin-top:18px;overflow:hidden;
+  }
+  .guide summary{
+    list-style:none;cursor:pointer;padding:14px 18px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-weight:700;font-size:14.5px;background:#fbfaf7;
+  }
+  .guide summary::-webkit-details-marker{display:none;}
+  .guide summary .chev{transition:transform .15s;color:var(--ink-soft);font-size:13px;}
+  .guide[open] summary .chev{transform:rotate(180deg);}
+  .guide-body{padding:4px 18px 20px 18px;font-size:13.5px;line-height:1.6;color:var(--ink);}
+  .guide-body h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--teal);margin:20px 0 8px 0;}
+  .guide-body h3:first-child{margin-top:14px;}
+  .guide-body p{margin:0 0 10px 0;}
+  .guide-body ol, .guide-body ul{margin:0 0 12px 0;padding-left:20px;}
+  .guide-body li{margin-bottom:6px;}
+  .guide-body table{width:100%;border-collapse:collapse;margin:6px 0 14px 0;font-size:13px;}
+  .guide-body th, .guide-body td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;}
+  .guide-body th{background:var(--paper);font-weight:700;}
+  .guide-body .rank-list{padding-left:0;list-style:none;counter-reset:rank;}
+  .guide-body .rank-list li{
+    counter-increment:rank;position:relative;padding-left:30px;margin-bottom:10px;
+  }
+  .guide-body .rank-list li::before{
+    content:counter(rank);position:absolute;left:0;top:0;
+    width:20px;height:20px;border-radius:50%;background:var(--teal);color:#fff;
+    font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  }
+  .guide-body .warn{
+    background:#FBEAE4;border:1px solid var(--danger);border-radius:7px;
+    padding:10px 12px;margin:8px 0 14px 0;font-size:13px;
+  }
+  .guide-body .gold{
+    background:var(--amber-soft);border:1px solid #EFD8AA;border-radius:7px;
+    padding:10px 12px;margin:8px 0 14px 0;font-size:13px;font-weight:600;
+  }
+  .guide-body a{color:var(--teal-dark);}
 </style>
 </head>
 <body>
@@ -185,6 +225,62 @@
 </header>
 
 <div class="wrap">
+
+  <details class="guide">
+    <summary>📋 Guia de Métodos de Pagamento — quando e como oferecer cada um <span class="chev">▾</span></summary>
+    <div class="guide-body">
+
+      <h3>1. Rebill x Stripe</h3>
+      <p>A escolha depende de <strong>onde o cartão do cliente foi emitido</strong> — não de onde o cliente mora.</p>
+      <table>
+        <tr><th></th><th>Rebill</th><th>Stripe</th></tr>
+        <tr><td><strong>Quando usar</strong></td><td>Cartão de crédito emitido no Brasil</td><td>Lead fora do Brasil, usando cartão emitido fora do Brasil</td></tr>
+        <tr><td><strong>Formas de pagamento</strong></td><td>Cartão de crédito, boleto, Pix e recorrência</td><td>Cartão de crédito ou débito (não aceita boleto)</td></tr>
+      </table>
+      <div class="warn">⚠️ Se o cliente passar um cartão emitido no Brasil em um link Stripe, será cobrado IOF pelo governo brasileiro.</div>
+      <p><em>Exemplo:</em> um cliente brasileiro morando em Portugal, mas com cartão emitido no Brasil, ainda usa Rebill. O que define a plataforma é o país de emissão do cartão, não a localização do cliente.</p>
+
+      <h3>2. Ordem de oferecimento (do que gera mais comissão para o que deve ser evitado)</h3>
+      <ol class="rank-list">
+        <li><strong>À vista</strong> — maior comissão para o vendedor. Sempre a primeira opção a ser oferecida.</li>
+        <li><strong>Cartão de crédito parcelado</strong> — parcelamento no valor cheio do cartão (ex.: 12x de R$818). Também gera comissão alta — o valor de parcela usado como base para qualquer outro cálculo é sempre o do cartão de crédito, nunca o à vista.</li>
+        <li><strong>Entrada + recorrência (50%)</strong> — entrada de 50% do valor + parcelas na recorrência (ex.: 6x). Entrada e 1ª parcela da recorrência são cobradas no mesmo dia.</li>
+        <li><strong>Recorrência (duração do curso)</strong> — parcelamento no mesmo número de meses da duração do curso (ex.: curso de 5 meses = 5 parcelas).</li>
+        <li><strong>Recorrência longa</strong> — parcelamento no dobro da duração do curso (ex.: curso de 5 meses = 10 parcelas). Pior forma de pagamento para a empresa — última opção, só quando não há alternativa.</li>
+      </ol>
+      <div class="gold">🏆 Regra de ouro: nunca usar o valor à vista como base para calcular outra forma de pagamento (entrada, parcelamento em mais de um cartão, etc.). A base de cálculo é sempre o valor do cartão de crédito parcelado.</div>
+
+      <h3>3. Detalhamento de cada forma</h3>
+      <p><strong>À vista e cartão de crédito parcelado:</strong> o valor de cartão é apresentado já no maior número de parcelas (ex.: 12x de R$818) para reduzir o impacto psicológico do valor total e abrir margem de negociação. Se o cliente perguntar o valor à vista, use como incentivo para fechamento imediato. O cliente precisa ter limite suficiente no cartão (ex.: ~R$11 mil de limite para 12x de R$818).</p>
+      <p><strong>Entrada + recorrência:</strong> opções padrão são 20% de entrada + 6 parcelas, 20% de entrada + 10 parcelas, ou 50% de entrada + 50% parcelado na recorrência. Entrada e 1ª parcela precisam ser pagas no mesmo dia — é o que garante que a cobrança recorrente comece. O valor de entrada pode ser negociado (calculado sempre com base no valor do cartão de crédito).</p>
+      <p><strong>Recorrência (duração do curso):</strong> número de parcelas igual à duração do curso (ex.: QA de 5 meses = 5 parcelas). Os valores já vêm com desconto aplicado na planilha, mas o cupom correspondente ainda precisa ser aplicado no link para não cobrar o valor errado.</p>
+      <p><strong>Recorrência longa (última opção):</strong> parcelamento no dobro da duração do curso. É a pior forma de pagamento para a empresa — só oferecer quando o cliente realmente não consegue pagar nenhuma das opções anteriores.</p>
+
+      <h3>4. Parcelamento em mais de um cartão</h3>
+      <p>Quando o cliente quer dividir o pagamento em mais de um cartão (ex.: 12x de R$818 dividido em 3 cartões), o valor total não muda — o sistema gera links separados e a soma das parcelas continua a mesma. Não é uma forma de pagamento diferente, é apenas uma divisão do mesmo valor.</p>
+
+      <h3>5. Atendimento a leads fora do Brasil</h3>
+      <p><strong>Passo 1 — Descobrir se o lead consegue pagar na Rebill:</strong> pergunte diretamente se o lead tem cartão de crédito emitido no Brasil, ou alguém no Brasil que possa ajudar. Se sim, atendimento normal pela Rebill, valores padrão do dashboard. Só aprofunde os próximos passos se não houver nenhuma forma de pagar com cartão brasileiro.</p>
+      <p><strong>Passo 2 — Entender o orçamento antes de oferecer um valor:</strong> pergunte ao lead o que caberia no orçamento por parcela (pode ser na moeda local). Evite ir oferecendo parcelas cada vez menores até o cliente aceitar — isso "queima cartucho" e enfraquece a negociação.</p>
+      <p><strong>Passo 3 — Usar a tabela de recorrência específica para Portugal:</strong> existe planilha própria com valores um pouco mais altos que a tabela padrão em reais (o risco de inadimplência fora do Brasil é maior). É essa tabela — não a padrão — que deve servir de base. Como regra geral, não se vende o valor de Rebill padrão em reais para um aluno de Portugal; exceções são avaliadas caso a caso.</p>
+      <p><strong>Passo 4 — Converter para a moeda do cliente apenas como referência:</strong> depois de definir a parcela em reais, converta (ex.: Wise, Google) só para o vendedor visualizar em euros. Nunca passar esse valor convertido ao cliente como número fechado — deixar claro que é uma estimativa, já que a cotação muda mês a mês e varia de banco para banco.</p>
+      <p>A plataforma para quem está fora do Brasil sem cartão brasileiro é sempre a Stripe (cartão de crédito ou débito, nunca boleto). Se o lead tiver cartão brasileiro mas estiver fora do Brasil, o atendimento é o padrão em Rebill — o país de emissão do cartão é o que importa, não onde o cliente mora.</p>
+
+      <h3>6. Quando solicitar um link específico</h3>
+      <p>Sempre que o cliente pedir um valor ou parcelamento que não está nos links padrão, o Closer precisa solicitar a criação do link através do Jira, junto ao financeiro. Evite "inventar moda" fora dos formatos padrão sempre que possível — pedidos muito específicos geram mais trabalho para todo mundo e, se o valor da entrada ou parcela for pequeno, muitas vezes não compensa o esforço.</p>
+
+      <h3>7. Por que a ordem importa: comissionamento</h3>
+      <p>O comissionamento é calculado com base em duas métricas combinadas — número de contratos e valor em cash. Vender muita recorrência exige mais contratos para bater a meta, já que o valor entra aos poucos. Vender apenas cursos de valor alto sem bater o mínimo de contratos também não gera comissão completa. Priorizar à vista e cartão de crédito maximiza a comissão; a recorrência existe para não perder vendas de leads sem outra forma de pagar.</p>
+
+      <h3>8. Onde encontrar os links e ferramentas</h3>
+      <ul>
+        <li><strong>Dashboard Links Importantes</strong> — abas Cursos, Cupons, Indicação, Links úteis e Playbook. Dentro de cada curso, a aba "Pagamentos" traz os atalhos rápidos usados durante o atendimento (apresentação do programa, link de matrícula, grade curricular, valor à vista e cartão de crédito em 12x). <a href="https://luaine-almeida.github.io/Links-Importantes-Triple10/" target="_blank" rel="noopener">Acessar dashboard →</a></li>
+        <li><strong>Planilha completa de valores</strong> — todas as modalidades e percentuais de desconto, para casos que fogem do padrão dos Links Importantes.</li>
+        <li><strong>Este simulador</strong> — para calcular rapidamente entrada + parcelas quando o cliente propõe uma combinação personalizada.</li>
+      </ul>
+
+    </div>
+  </details>
 
   <div class="step" id="step-curso">
     <div class="step-label"><div class="step-num">1</div><div class="step-title">Curso</div></div>
