@@ -344,6 +344,7 @@
   <div class="step disabled" id="step-nparcelas-recorrencia">
     <div class="step-label"><div class="step-num">6</div><div class="step-title">Parcelar o restante em quantas vezes na recorrência?</div></div>
     <input type="number" id="nparcelas-recorrencia" min="1" step="1" placeholder="Ex: 24">
+    <div class="field-hint" id="nparcelas-recorrencia-hint"></div>
   </div>
 
   <div id="result-holder"></div>
@@ -497,6 +498,13 @@ secaoEl.addEventListener('change', ()=>{
 
   if(sel.secao === CUSTOM_RECORRENCIA_VALUE){
     setDisabled('step-desconto-recorrencia', false);
+    const pontosCurso = recorrenciaLongaTable[sel.curso] || [];
+    const parcelasValidas = pontosCurso.map(p=>p[0]).sort((a,b)=>a-b);
+    const minP = parcelasValidas[0], maxP = parcelasValidas[parcelasValidas.length-1];
+    nparcelasRecorrenciaEl.min = minP;
+    nparcelasRecorrenciaEl.max = maxP;
+    document.getElementById('nparcelas-recorrencia-hint').textContent =
+      `Nessa modalidade a planilha vai de ${minP}x a ${maxP}x para este curso.`;
     const available = coupons.map((c,i)=>({c,i})).filter(x => x.c.pct <= RECORRENCIA_LONGA_MAX_DESCONTO);
     descontoRecorrenciaHolder.innerHTML = `<button type="button" class="pill active" data-i="-1">Sem desconto</button>` +
       available.map(x=>`<button type="button" class="pill" data-i="${x.i}">${Math.round(x.c.pct*100)}% OFF</button>`).join('');
@@ -774,8 +782,14 @@ function renderRecorrenciaResult(){
   const entrada = entradaRaw === '' ? null : Number(entradaRaw);
   const n = nRaw === '' ? null : Number(nRaw);
 
+  const pontosCurso = recorrenciaLongaTable[sel.curso] || [];
+  const parcelasValidas = pontosCurso.map(p=>p[0]).sort((a,b)=>a-b);
+  const minP = parcelasValidas[0], maxP = parcelasValidas[parcelasValidas.length-1];
+
   let calcHtml = '';
-  if(entrada!==null && n!==null && n>0){
+  if(n!==null && (n < minP || n > maxP)){
+    calcHtml = `<div class="empty-msg">Para este curso, a recorrência longa vai de ${minP}x a ${maxP}x na planilha. Ajuste o número de parcelas para dentro dessa faixa.</div>`;
+  } else if(entrada!==null && n!==null && n>0){
     const base = estimarTotalRecorrenciaLonga(sel.curso, n);
     const valorComDesconto = base!==null ? base * (1 - discountPct) : null;
     const restante = valorComDesconto!==null ? Math.max(valorComDesconto - entrada, 0) : null;
@@ -788,9 +802,9 @@ function renderRecorrenciaResult(){
         <div class="price-box"><div class="lbl">Restante a parcelar</div><div class="val">${fmt(restante)}</div></div>
         <div class="price-box" style="grid-column:1/-1;"><div class="lbl">${n}x de</div><div class="val">${fmt(parcela)}</div></div>
       </div>
-      <div class="field-hint" style="margin-bottom:14px;">Valor estimado por interpolação a partir dos valores reais da planilha para essa quantidade de parcelas — o valor por parcela cresce um pouco conforme mais parcelas são escolhidas (juro da recorrência).</div>`;
+      <div class="field-hint" style="margin-bottom:14px;">Valor estimado por interpolação a partir dos valores reais da planilha (${minP}x a ${maxP}x) para este curso.</div>`;
   } else {
-    calcHtml = `<div class="empty-msg">Informe a entrada e o número de parcelas para calcular o valor (o valor total muda conforme a quantidade de parcelas escolhida).</div>`;
+    calcHtml = `<div class="empty-msg">Informe a entrada e o número de parcelas (entre ${minP}x e ${maxP}x para este curso) para calcular o valor.</div>`;
   }
 
   const jiraHtml = `<div class="jira-box">
