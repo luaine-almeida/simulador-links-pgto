@@ -386,6 +386,7 @@ function getCartaoParcelasExato(curso, parcelas, discountPct, campo){
   if(!valores || valores[pctKey]===undefined) return null;
   return valores[pctKey];
 }
+
 const recorrenciaLongaTableStripe = DATA.recorrenciaLongaTableStripe || {};
 
 function getRecorrenciaLongaTable(fonte){
@@ -710,10 +711,15 @@ function renderResult(){
   const parcela = row.parcela_mensal;
   const total = row.valor_total;
 
-  // Para a modalidade de cartão parcelado (1-12x), usamos o valor EXATO da tabela
-  // em vez de uma estimativa linear, já que temos o preço certo para cada combinação.
-  const exatoParcela = getCartaoParcelasExato(sel.curso, sel.parcelas, discountPct, 'mensal');
-  const exatoTotal = getCartaoParcelasExato(sel.curso, sel.parcelas, discountPct, 'total');
+  // Regra de negócio: só o "Cartão de crédito parcelado" tem juros proporcional
+  // às parcelas calculado de verdade — por isso só ele usa o valor EXATO da tabela.
+  // Todo o resto (incluindo a recorrência longa) usa a estimativa linear do desconto.
+  const isCartaoParceladoSecao = sel.secao === 'Cartão de crédito parcelado (escolha o número de parcelas, 1 a 12x)';
+  let exatoParcela = null, exatoTotal = null;
+  if(isCartaoParceladoSecao){
+    exatoParcela = getCartaoParcelasExato(sel.curso, sel.parcelas, discountPct, 'mensal');
+    exatoTotal = getCartaoParcelasExato(sel.curso, sel.parcelas, discountPct, 'total');
+  }
   const usaValorExato = exatoParcela!==null && exatoTotal!==null;
 
   const entradaDesc = (typeof entrada === 'number') ? entrada*(1-discountPct) : entrada;
